@@ -10,7 +10,11 @@ class WebCrawler:
         self.url = user_input
 
     def validate_url(self):
+<<<<<<< HEAD
         if self.url: 
+=======
+        if self.url:
+>>>>>>> c09af6f4aba8132b6e230d501788cacaf66d4ca0
             try:
                 requests.get(self.url, timeout=30)
             except requests.exceptions.RequestException, e:
@@ -25,7 +29,11 @@ class WebCrawler:
             self.validate_url()
 
     def fetch_content(self):
+<<<<<<< HEAD
         url = self.validate_url() 
+=======
+        url = self.validate_url()
+>>>>>>> c09af6f4aba8132b6e230d501788cacaf66d4ca0
         html = requests.get(url)
         content = lxml.html.fromstring(html.text)
         links_dict = {}
@@ -34,7 +42,11 @@ class WebCrawler:
                 links_dict[element.text.strip()] = element.attrib['href']
             except:
                 pass
+<<<<<<< HEAD
         return links_dict 
+=======
+        return links_dict
+>>>>>>> c09af6f4aba8132b6e230d501788cacaf66d4ca0
 
     def get_amazon_image(self, url, domain_name):
         department_url_pattern = '^http\:\/\/' + domain_name + '\/[a-zA-z]{2,}(.*)$'
@@ -52,13 +64,21 @@ class WebCrawler:
                     pass
         else:
             print 'not match'
+<<<<<<< HEAD
+=======
+
+>>>>>>> c09af6f4aba8132b6e230d501788cacaf66d4ca0
 try:
     user_input = sys.argv[1]
 except IndexError:
     user_input = False
 
 crawler = WebCrawler(user_input)
+<<<<<<< HEAD
 crawler.get_amazon_image('http://www.amazon.co.uk/DVDs-Blu-ray-box-sets/b/ref=sa_menu_dvd_blu?ie=UTF8&node=283926','www.amazon.co.uk')
 #html = lxml.html.fromstring(requests.get(crawler.validate_url()).text)
 #for item in html.xpath('//a/@href'):
 #    print item
+=======
+crawler.get_amazon_image('http://www.amazon.co.uk/DVDs-Blu-ray-box-sets/b/ref=sa_menu_dvd_blu?ie=UTF8&node=283926', 'www.amazon.co.uk')
+>>>>>>> c09af6f4aba8132b6e230d501788cacaf66d4ca0
