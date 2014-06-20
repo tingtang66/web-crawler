@@ -9,7 +9,7 @@ import subprocess
 class WebCrawler:
 
     def __init__(self, user_input, user_agent):
-        self.url = user_input
+        self.domain_name = user_input
         self.agent = user_agent
         self.cookies = requests.get(self.validate_url(), headers = self.agent).cookies
 
@@ -26,47 +26,59 @@ class WebCrawler:
         print "Download Success"
         return
 
+    #Make sure the url or domain is working
+    #Return domain name and full URL with http://
     def validate_url(self):
-        if self.url:
+        if url:
             try:
-                requests.get(self.url, timeout=30)
+                requests.get(url, timeout=30)
             except requests.exceptions.RequestException, e:
                 print('Reason:\n %s' % str(e))
                 print('Please input a valid URL')
-                self.url = raw_input(':')
+                self.domain_name = raw_input(':')
                 self.validate_url()
         else:
             print('Please input URL')
-            self.url = raw_input(':')
+            self.domain_name = raw_input(':')
             self.validate_url()
-        url = self.url
-        return url
+        domain_name = self.domain_name
+        url = 'http://' + domain_name
+        return domain_name, url
 
-    def fetch_content(self):
-        url = self.validate_url()
-        html = requests.get(url)
-        content = lxml.html.fromstring(html.text)
-        links_dict = {}
-        for element in content.xpath('//a[@href]'):
-            try:
-                links_dict[element.text.strip()] = element.attrib['href']
-            except:
-                pass
-        return links_dict 
+    #function for prompt selection for user, and getting selection from user
+    #'sections' must be a list!
+    def get_selection(self, sections):
+        num = 0
+        for el_section in sections:
+            print str(num) + ':' + el_section
+            num += 1
+        print "Please choose a section number:"
+        selection = raw_input()
+        return selection, sections[int(selection)]
 
-    def get_amazon_image(self, url, domain_name):
+    def pick_department(self):
+        cats = []
+        subcats_url = {}
+        domain_name, url = self.validate_url()
+        front_page = self.get_page(url)
+        for li in front_page.xpath("//ul[@id='nav_cats']//li"):
+            if li.text:
+                cats.append(li.text)
+        cats_num = self.get_selection(cats)[0]
+        subcats_id = 'nav_subcats_' + str(cats_num)
+        for subcats in front_page.xpath("//div[@id='nav_subcats']//div[@id=$id]//a", id = subcats_id):
+            if subcats.text:
+                subcats_url[subcats.text] = subcats.attrib['href']
+        return domain_name, subcats_url[self.get_selection(subcats_url.keys())[1]]
+
+        #self.get_selection(cats)
+
+        #return subcats_url
+
+    def get_amazon_image(self):
+        domain_name, absolute_path = self.pick_department()
         department_url_pattern = '^http\:\/\/' + domain_name + '\/[a-zA-z]{2,}(.*)$'
         department = re.match(department_url_pattern, url)
-
-        #function for prompt selection for user, and getting selection from user
-        def get_selection(user_input):
-            num = 0
-            for el_section in user_input:
-                print str(num) + ':' + el_section
-                num += 1
-            print "Please choose a section number:"
-            selection = raw_input()
-            return user_input[int(selection)]
 
         #Get products
         def get_products_image(domain_name, absolute_path):
@@ -87,11 +99,12 @@ class WebCrawler:
             else:
                 print "You have got all the image you would download"
                 return
+
         #initial page and breakdown page to find the usable hrefs
         if department:
             front_page = self.get_page(url)
             sections = [ cat_section.text for cat_section in front_page.xpath("//div[@id='refinements']//h2") ]
-            selection = get_selection(sections)
+            selection = self.get_selection(sections)[1]
             s = front_page.xpath("//h2[text()=$name]", name = selection )[0].getnext()
             option = {}
             for el_link in s.xpath(".//a[@href][re:match(@href, '\/s\/(.*)')]", namespaces={'re': 'http://exslt.org/regular-expressions'}):
@@ -99,6 +112,6 @@ class WebCrawler:
                     option[el_link.xpath('./span/text()')[0]] = el_link.attrib['href']
                 except:
                     pass
-            get_products_image(domain_name, option[get_selection(option.keys())])
+            get_products_image(domain_name, option[self.get_selection(option.keys())])
         else:
             print 'not match'
