@@ -9,4 +9,4 @@ except IndexError:
     user_input = False
 
 crawler = WebCrawler(user_input, firefox)
-crawler.pick_department()
+crawler.validate_url()

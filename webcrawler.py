@@ -11,7 +11,7 @@ class WebCrawler:
     def __init__(self, user_input, user_agent):
         self.domain_name = user_input
         self.agent = user_agent
-        self.cookies = requests.get(self.validate_url(), headers = self.agent).cookies
+        self.cookies = requests.get(self.validate_url()[1], headers = self.agent).cookies
 
     #Method for init lxml object of page content
     def get_page(self, url):
@@ -29,9 +29,9 @@ class WebCrawler:
     #Make sure the url or domain is working
     #Return domain name and full URL with http://
     def validate_url(self):
-        if url:
+        if self.domain_name:
             try:
-                requests.get(url, timeout=30)
+                requests.get('http://' + self.domain_name, timeout=30)
             except requests.exceptions.RequestException, e:
                 print('Reason:\n %s' % str(e))
                 print('Please input a valid URL')
@@ -70,10 +70,6 @@ class WebCrawler:
             if subcats.text:
                 subcats_url[subcats.text] = subcats.attrib['href']
         return domain_name, subcats_url[self.get_selection(subcats_url.keys())[1]]
-
-        #self.get_selection(cats)
-
-        #return subcats_url
 
     def get_amazon_image(self):
         domain_name, absolute_path = self.pick_department()
