@@ -4,6 +4,7 @@ import lxml.html
 import lxml
 import re
 import requests 
+import subprocess
 
 firefox = {'User-Agent':'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'}
 class WebCrawler:
@@ -15,6 +16,14 @@ class WebCrawler:
     def get_page(self, url):
         raw_content = requests.get(url, headers=firefox).text.encode('utf8')
         return lxml.html.fromstring(raw_content)
+
+    #Download products image to specified folder
+    def download_image(slef, url, product_name):
+        folder = 'cover/' + product_name.replace(' ', '_') + '/' + re.sub(r'^http\:\/\/(.*)\/(.*)\/(.*)\/', '', url)
+        print folder
+        subprocess.call(['curl', '--create-dirs', '-o', folder, url]) 
+        print "Download Success"
+        return
 
     def validate_url(self):
         if self.url:
@@ -57,6 +66,25 @@ class WebCrawler:
             selection = raw_input()
             return user_input[int(selection)]
 
+        #Get products
+        def get_products_image(domain_name, absolute_path):
+            internal_page_url = 'http://' + domain_name + absolute_path
+            internal_page = self.get_page(internal_page_url)
+            el_num = 0
+            while el_num <24:
+                el = 'result_' + str(el_num)
+                products_page = self.get_page(internal_page.xpath("//div[@id='resultsCol']//div[@id=$result]//a", result=el)[0].attrib['href'])
+                tag_attrib = products_page.xpath("//img[@id='main-image']")[0].attrib
+                product_name = internal_page.xpath("//div[@id='resultsCol']//div[@id=$result]//h3//span/text()", result=el)[0]
+                print product_name
+                self.download_image(tag_attrib['src'], product_name)
+                self.download_image(tag_attrib['rel'], product_name)
+                el_num += 1
+            if internal_page.xpath("//a[@title='Next Page']")[0].attrib['href']: 
+                get_products_image(domain_name, internal_page.xpath("//a[@title='Next Page']")[0].attrib['href'])
+            else:
+                print "You have got all the image you would download"
+                return
         #initial page and breakdown page to find the usable hrefs
         if department:
             front_page = self.get_page(url)
@@ -69,13 +97,9 @@ class WebCrawler:
                     option[el_link.xpath('./span/text()')[0]] = el_link.attrib['href']
                 except:
                     pass
-            rebuilt_url = 'http://' + domain_name + option[get_selection(option.keys())]
-            internal_page = self.get_page(rebuilt_url)
-            p = internal_page.xpath("//div[@id='resultsCol']")[0]
-            print p.xpath("//div[@id=$result]", result = 'result_23')[0]
+            get_products_image(domain_name, option[get_selection(option.keys())])
         else:
             print 'not match'
-
 try:
     user_input = sys.argv[1]
 except IndexError:
