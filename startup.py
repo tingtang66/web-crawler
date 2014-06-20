@@ -9,4 +9,5 @@ except IndexError:
     user_input = False
 
 crawler = WebCrawler(user_input, firefox)
-crawler.validate_url()
+#crawler.validate_url()
+crawler.get_amazon_image()

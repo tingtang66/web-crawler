@@ -73,8 +73,7 @@ class WebCrawler:
 
     def get_amazon_image(self):
         domain_name, absolute_path = self.pick_department()
-        department_url_pattern = '^http\:\/\/' + domain_name + '\/[a-zA-z]{2,}(.*)$'
-        department = re.match(department_url_pattern, url)
+        url = 'http://' + domain_name + absolute_path
 
         #Get products
         def get_products_image(domain_name, absolute_path):
@@ -97,17 +96,14 @@ class WebCrawler:
                 return
 
         #initial page and breakdown page to find the usable hrefs
-        if department:
-            front_page = self.get_page(url)
-            sections = [ cat_section.text for cat_section in front_page.xpath("//div[@id='refinements']//h2") ]
-            selection = self.get_selection(sections)[1]
-            s = front_page.xpath("//h2[text()=$name]", name = selection )[0].getnext()
-            option = {}
-            for el_link in s.xpath(".//a[@href][re:match(@href, '\/s\/(.*)')]", namespaces={'re': 'http://exslt.org/regular-expressions'}):
-                try:
-                    option[el_link.xpath('./span/text()')[0]] = el_link.attrib['href']
-                except:
-                    pass
-            get_products_image(domain_name, option[self.get_selection(option.keys())])
-        else:
-            print 'not match'
+        front_page = self.get_page(url)
+        sections = [ cat_section.text for cat_section in front_page.xpath("//div[@id='refinements']//h2") ]
+        selection = self.get_selection(sections)[1]
+        s = front_page.xpath("//h2[text()=$name]", name = selection )[0].getnext()
+        option = {}
+        for el_link in s.xpath(".//a[@href][re:match(@href, '\/s\/(.*)')]", namespaces={'re': 'http://exslt.org/regular-expressions'}):
+            try:
+                option[el_link.xpath('./span/text()')[0]] = el_link.attrib['href']
+            except:
+                pass
+        get_products_image(domain_name, option[self.get_selection(option.keys())[1]])
